@@ -2,7 +2,14 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['igkosdwgkvqpucwovrdz.supabase.co'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'igkosdwgkvqpucwovrdz.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
   },
 }
 
