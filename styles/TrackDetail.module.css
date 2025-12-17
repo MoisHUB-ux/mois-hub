@@ -1,239 +1,517 @@
 .main {
-  min-height: 100vh;
-  padding: 2rem 1rem 6rem;
-  max-width: 900px;
+  padding: 2rem 1rem;
+  max-width: 1400px;
   margin: 0 auto;
+  min-height: 80vh;
 }
 
 .backLink {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   color: #667eea;
   text-decoration: none;
-  font-weight: 600;
   margin-bottom: 2rem;
-  font-size: 1.1rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s;
+  background: rgba(102, 126, 234, 0.1);
 }
 
 .backLink:hover {
-  text-decoration: underline;
+  background: rgba(102, 126, 234, 0.2);
+  transform: translateX(-5px);
 }
 
-.trackHeader {
-  background: white;
-  border-radius: 16px;
+.contentGrid {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 3rem;
+  margin-bottom: 3rem;
+}
+
+@media (max-width: 1024px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .playerSection {
+    max-width: 450px;
+    margin: 0 auto;
+  }
+}
+
+/* Плеер - Glassmorphism стиль */
+.playerSection {
+  background: linear-gradient(145deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  border-radius: 24px;
   padding: 2rem;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  margin-bottom: 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 2rem;
-  flex-wrap: wrap;
-}
-
-.trackInfo {
-  flex: 1;
-}
-
-.trackInfo h1 {
-  margin: 0 0 1rem 0;
-  font-size: 2.5rem;
-  color: #2d3748;
-}
-
-.genre {
-  padding: 0.5rem 1rem;
-  background: #667eea;
   color: white;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  font-weight: 600;
+  box-shadow: 
+    0 25px 50px -12px rgba(102, 126, 234, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
+  backdrop-filter: blur(20px);
 }
 
-.author {
+.coverImage {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.coverImage:hover {
+  transform: scale(1.02);
+}
+
+.coverPlaceholder {
+  width: 100%;
+  aspect-ratio: 1;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.coverIcon {
+  font-size: 5rem;
+  opacity: 0.5;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 0.7; }
+}
+
+.trackTitle {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.artistName {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.genreBadge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1.25rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Прогресс бар */
+.progressSection {
   display: flex;
   align-items: center;
   gap: 1rem;
-  text-decoration: none;
-  color: inherit;
+  margin: 1.5rem 0;
+}
+
+.timeLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-width: 45px;
+  opacity: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+
+.progressBar {
+  flex: 1;
+  height: 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  transition: height 0.2s;
+}
+
+.progressBar:hover {
+  height: 8px;
+}
+
+.progressBar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   transition: transform 0.2s;
 }
 
-.author:hover {
+.progressBar::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.progressBar::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.progressBar::-webkit-slider-runnable-track {
+  border-radius: 10px;
+}
+
+/* Кнопки управления */
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.playButtonLarge {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: none;
+  background: white;
+  color: #667eea;
+  font-size: 1.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.3),
+    0 0 0 4px rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.playButtonLarge:hover {
+  transform: scale(1.1);
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 6px rgba(255, 255, 255, 0.3);
+}
+
+.playButtonLarge:active {
+  transform: scale(0.95);
+}
+
+.controlButton {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.controlButton:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.1);
+}
+
+.controlButton:active {
+  transform: scale(0.95);
+}
+
+/* Дополнительные контролы */
+.secondaryControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.iconButton {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.iconButton:hover {
+  background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
 }
 
-.avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+.iconButton.active {
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.volumeControl {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-.authorName {
-  font-weight: 600;
-  font-size: 1.1rem;
-  color: #2d3748;
-}
-
-.authorLevel {
-  font-size: 0.9rem;
-  color: #718096;
-}
-
-.trackPlayer {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.playButton,
-.downloadButton {
+  gap: 0.75rem;
   flex: 1;
-  padding: 1.5rem;
-  border: none;
-  border-radius: 12px;
-  font-size: 1.3rem;
-  font-weight: 700;
+  max-width: 160px;
+  margin: 0 1rem;
+}
+
+.volumeSlider {
+  flex: 1;
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  outline: none;
   cursor: pointer;
-  transition: all 0.2s;
-  text-decoration: none;
+  -webkit-appearance: none;
+}
+
+.volumeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.volumeSlider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: none;
+}
+
+/* Правая колонка */
+.contentSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  background: #f8f9fa;
+  padding: 0.5rem;
+  border-radius: 16px;
+}
+
+.tab {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.3s;
+}
+
+.tab:hover {
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.activeTab {
+  color: white;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.tabContent {
+  animation: slideIn 0.4s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.descriptionBlock {
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.descriptionBlock h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1.1rem;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.5rem;
 }
 
-.playButton {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+.descriptionBlock h3::before {
+  content: '📄';
 }
 
-.playButton:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-}
-
-.downloadButton {
-  background: #48bb78;
-  color: white;
-}
-
-.downloadButton:hover {
-  background: #38a169;
-  transform: translateY(-4px);
-}
-
-.description {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  margin-bottom: 2rem;
-}
-
-.description h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1.3rem;
-  color: #2d3748;
-}
-
-.description p {
-  margin: 0;
-  color: #4a5568;
+.descriptionBlock p {
+  color: #555;
   line-height: 1.7;
+  margin: 0;
   white-space: pre-wrap;
 }
 
-.stats {
+.statsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
-  margin-bottom: 2rem;
 }
 
-.statItem {
+.statCard {
   background: white;
-  border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   text-align: center;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s;
+}
+
+.statCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
 }
 
 .statIcon {
   font-size: 2rem;
-  margin-bottom: 0.5rem;
+  display: block;
+  margin-bottom: 0.75rem;
 }
 
 .statValue {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #667eea;
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 0.25rem;
 }
 
 .statLabel {
-  font-size: 0.9rem;
-  color: #718096;
+  display: block;
+  font-size: 0.85rem;
+  color: #888;
+  font-weight: 500;
 }
 
-.loginPrompt,
-.alreadyReviewed,
-.ownTrack {
+.lyricsBlock {
   background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  max-height: 500px;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.lyricsBlock::-webkit-scrollbar {
+  width: 8px;
+}
+
+.lyricsBlock::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.lyricsBlock::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+}
+
+.lyricsText {
+  font-family: 'Georgia', serif;
+  font-size: 1.05rem;
+  line-height: 2;
+  color: #444;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+/* Рецензии */
+.reviewsSection {
+  margin-top: 4rem;
+  padding-top: 3rem;
+  border-top: 2px solid #f0f0f0;
+}
+
+.sectionTitle {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: #333;
+  font-weight: 800;
+}
+
+.loginPrompt, .alreadyReviewed, .ownTrack {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+  padding: 1.5rem 2rem;
+  border-radius: 16px;
   margin-bottom: 2rem;
   text-align: center;
-}
-
-.loginPrompt p,
-.alreadyReviewed p,
-.ownTrack p {
-  margin: 0;
-  font-size: 1.1rem;
-  color: #4a5568;
+  font-size: 1rem;
 }
 
 .loginPrompt a {
   color: #667eea;
-  font-weight: 600;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.loginPrompt a:hover {
   text-decoration: underline;
-}
-
-.alreadyReviewed {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.ownTrack {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-@media (max-width: 768px) {
-  .trackHeader {
-    flex-direction: column;
-  }
-
-  .trackInfo h1 {
-    font-size: 1.8rem;
-  }
-
-  .trackPlayer {
-    flex-direction: column;
-  }
-
-  .stats {
-    grid-template-columns: 1fr;
-  }
 }
