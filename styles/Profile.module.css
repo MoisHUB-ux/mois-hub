@@ -1,0 +1,355 @@
+.main {
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  padding-bottom: 6rem;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.profileHeader {
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.profileInfo {
+  flex: 1;
+  min-width: 250px;
+}
+
+.username {
+  font-size: 2rem;
+  margin: 0 0 0.5rem 0;
+  color: #2d3748;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.verified {
+  font-size: 1.5rem;
+}
+
+.accountType {
+  font-size: 1.1rem;
+  color: #718096;
+  margin-bottom: 0.5rem;
+}
+
+.smuleLink {
+  display: inline-block;
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  background: #f0f4ff;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.smuleLink:hover {
+  background: #e0e7ff;
+  transform: translateY(-1px);
+}
+
+.editButton button {
+  padding: 0.75rem 1.5rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.editButton button:hover {
+  background: #5a67d8;
+  transform: translateY(-2px);
+}
+
+.stats {
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.statCard {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.statNumber {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 0.5rem;
+}
+
+.statLabel {
+  color: #718096;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.tracksSection {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.tracksSection h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  color: #2d3748;
+}
+
+.emptyTracks {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.emptyTracks p {
+  font-size: 1.1rem;
+  color: #718096;
+  margin-bottom: 1.5rem;
+}
+
+.uploadButton {
+  display: inline-block;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: transform 0.2s;
+}
+
+.uploadButton:hover {
+  transform: translateY(-2px);
+}
+
+.tracksList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.trackCard {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s;
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.trackCard:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.trackInfo {
+  flex: 1;
+}
+
+.trackInfo h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.3rem;
+  color: #2d3748;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.trackMeta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: #718096;
+  margin-bottom: 0.5rem;
+}
+
+.trackDescription {
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0.75rem 0 0 0;
+}
+
+.trackActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.playButton,
+.downloadButton,
+.deleteButton {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1rem;
+  min-width: 60px;
+}
+
+.playButton {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.playButton:hover {
+  transform: scale(1.05);
+}
+
+.downloadButton {
+  background: #48bb78;
+  color: white;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.downloadButton:hover {
+  background: #38a169;
+}
+
+.deleteButton {
+  background: #f56565;
+  color: white;
+}
+
+.deleteButton:hover {
+  background: #e53e3e;
+}
+
+.nowPlaying {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 2rem;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nowPlayingContent {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nowPlayingIcon {
+  font-size: 1.5rem;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.nowPlayingTitle {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.nowPlayingArtist {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.nowPlayingButton {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid white;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.2s;
+}
+
+.nowPlayingButton:hover {
+  background: white;
+  color: #667eea;
+}
+
+@media (max-width: 768px) {
+  .profileHeader {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .avatar {
+    width: 100px;
+    height: 100px;
+    font-size: 2.5rem;
+  }
+
+  .username {
+    font-size: 1.5rem;
+    justify-content: center;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .trackCard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .trackActions {
+    flex-direction: row;
+  }
+}

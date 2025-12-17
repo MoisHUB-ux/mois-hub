@@ -1,0 +1,239 @@
+.main {
+  min-height: 100vh;
+  padding: 2rem 1rem 6rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.backLink {
+  display: inline-block;
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.trackHeader {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.trackInfo {
+  flex: 1;
+}
+
+.trackInfo h1 {
+  margin: 0 0 1rem 0;
+  font-size: 2.5rem;
+  color: #2d3748;
+}
+
+.genre {
+  padding: 0.5rem 1rem;
+  background: #667eea;
+  color: white;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.author {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s;
+}
+
+.author:hover {
+  transform: translateY(-2px);
+}
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.authorName {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #2d3748;
+}
+
+.authorLevel {
+  font-size: 0.9rem;
+  color: #718096;
+}
+
+.trackPlayer {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.playButton,
+.downloadButton {
+  flex: 1;
+  padding: 1.5rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.playButton {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.playButton:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.downloadButton {
+  background: #48bb78;
+  color: white;
+}
+
+.downloadButton:hover {
+  background: #38a169;
+  transform: translateY(-4px);
+}
+
+.description {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+}
+
+.description h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.3rem;
+  color: #2d3748;
+}
+
+.description p {
+  margin: 0;
+  color: #4a5568;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.statItem {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.statIcon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.statValue {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 0.25rem;
+}
+
+.statLabel {
+  font-size: 0.9rem;
+  color: #718096;
+}
+
+.loginPrompt,
+.alreadyReviewed,
+.ownTrack {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.loginPrompt p,
+.alreadyReviewed p,
+.ownTrack p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #4a5568;
+}
+
+.loginPrompt a {
+  color: #667eea;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.alreadyReviewed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.ownTrack {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+@media (max-width: 768px) {
+  .trackHeader {
+    flex-direction: column;
+  }
+
+  .trackInfo h1 {
+    font-size: 1.8rem;
+  }
+
+  .trackPlayer {
+    flex-direction: column;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}

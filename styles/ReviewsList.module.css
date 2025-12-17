@@ -1,0 +1,177 @@
+.container {
+  margin-top: 2rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header h3 {
+  font-size: 1.5rem;
+  color: #2d3748;
+  margin: 0;
+}
+
+.avgRating {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: #f7fafc;
+  border-radius: 8px;
+}
+
+.avgNumber {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.avgStars {
+  display: flex;
+  gap: 0.1rem;
+}
+
+.stars {
+  display: flex;
+  gap: 0.1rem;
+}
+
+.star {
+  font-size: 1.2rem;
+}
+
+.empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.empty p {
+  margin: 0.5rem 0;
+  color: #718096;
+  font-size: 1.1rem;
+}
+
+.reviewsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.reviewCard {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s;
+}
+
+.reviewCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.reviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.reviewerInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.reviewerName {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #2d3748;
+  text-decoration: none;
+}
+
+.reviewerName:hover {
+  color: #667eea;
+  text-decoration: underline;
+}
+
+.reviewerLevel {
+  padding: 0.25rem 0.75rem;
+  background: #e0e7ff;
+  color: #667eea;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.reviewMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.reviewDate {
+  font-size: 0.85rem;
+  color: #718096;
+}
+
+.reviewComment {
+  color: #4a5568;
+  line-height: 1.7;
+  margin: 0 0 1rem 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.reviewActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.deleteButton {
+  padding: 0.5rem 1rem;
+  background: #f56565;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.deleteButton:hover {
+  background: #e53e3e;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .reviewHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .reviewMeta {
+    align-items: flex-start;
+  }
+
+  .avgRating {
+    width: 100%;
+    justify-content: center;
+  }
+}

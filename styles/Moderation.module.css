@@ -1,0 +1,351 @@
+.main {
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding-bottom: 6rem;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  color: #2d3748;
+}
+
+.header p {
+  font-size: 1.1rem;
+  color: #718096;
+}
+
+.filters {
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+  display: flex;
+  gap: 1rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  flex-wrap: wrap;
+}
+
+.filterButton {
+  flex: 1;
+  min-width: 150px;
+  padding: 0.75rem 1.5rem;
+  background: #f7fafc;
+  color: #2d3748;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+}
+
+.filterButton:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+.filterButton.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+}
+
+.stats {
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.statCard {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.statNumber {
+  display: block;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 0.5rem;
+}
+
+.statLabel {
+  color: #718096;
+  font-weight: 500;
+}
+
+.empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.empty h2 {
+  margin-bottom: 1rem;
+  color: #2d3748;
+}
+
+.empty p {
+  color: #718096;
+}
+
+.tracksList {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.trackCard {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s;
+}
+
+.trackCard:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.trackInfo {
+  margin-bottom: 1rem;
+}
+
+.trackHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.trackHeader h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #2d3748;
+  flex: 1;
+}
+
+.statusBadge {
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.statusBadge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.statusBadge.approved {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.statusBadge.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.author {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  color: #718096;
+  font-size: 0.95rem;
+  flex-wrap: wrap;
+}
+
+.level {
+  background: #ffd700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #744210;
+}
+
+.description {
+  color: #4a5568;
+  margin: 0.75rem 0;
+  line-height: 1.6;
+}
+
+.meta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: #718096;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.actions button,
+.actions a {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.playButton,
+.downloadButton {
+  background: #718096;
+  color: white;
+  min-width: 50px;
+}
+
+.playButton:hover,
+.downloadButton:hover {
+  background: #4a5568;
+}
+
+.approveButton {
+  background: #48bb78;
+  color: white;
+}
+
+.approveButton:hover {
+  background: #38a169;
+}
+
+.rejectButton {
+  background: #f56565;
+  color: white;
+}
+
+.rejectButton:hover {
+  background: #e53e3e;
+}
+
+.deleteButton {
+  background: #ed8936;
+  color: white;
+}
+
+.deleteButton:hover {
+  background: #dd6b20;
+}
+
+.nowPlaying {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 2rem;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nowPlayingContent {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nowPlayingIcon {
+  font-size: 1.5rem;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.nowPlayingTitle {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.nowPlayingArtist {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.nowPlayingButton {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid white;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.2s;
+}
+
+.nowPlayingButton:hover {
+  background: white;
+  color: #667eea;
+}
+
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .filters {
+    flex-direction: column;
+  }
+
+  .filterButton {
+    min-width: 100%;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions button,
+  .actions a {
+    width: 100%;
+  }
+}
