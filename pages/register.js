@@ -13,8 +13,7 @@ export default function Register() {
     email: '',
     password: '',
     confirmPassword: '',
-    accountType: 'author',
-    smuleProfile: ''
+    smuleNickname: ''
   })
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
@@ -74,11 +73,12 @@ export default function Register() {
       }
     }
 
-    if (name === 'smuleProfile') {
-      if (value.length > 0 && !value.startsWith('https://')) {
-        newErrors.smuleProfile = 'Ссылка должна начинаться с https://'
+    if (name === 'smuleNickname') {
+      // Проверка что ник содержит только буквы, цифры, подчёркивания
+      if (value.length > 0 && !/^[a-zA-Z0-9_]+$/.test(value)) {
+        newErrors.smuleNickname = 'Ник может содержать только буквы, цифры и подчёркивания'
       } else {
-        delete newErrors.smuleProfile
+        delete newErrors.smuleNickname
       }
     }
 
@@ -118,8 +118,8 @@ export default function Register() {
         options: {
           data: {
             username: formData.username,
-            account_type: formData.accountType,
-            smule_profile: formData.smuleProfile || null
+            account_type: 'both',
+            smule_nickname: formData.smuleNickname || null
           }
         }
       })
@@ -231,36 +231,19 @@ export default function Register() {
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="accountType">Тип аккаунта *</label>
-            <select
-              id="accountType"
-              name="accountType"
-              value={formData.accountType}
-              onChange={handleChange}
-              className={styles.input}
-              disabled={loading}
-            >
-              <option value="author">Автор (выкладываю треки)</option>
-              <option value="reviewer">Рецензент (оцениваю треки)</option>
-              <option value="both">Автор и Рецензент</option>
-            </select>
-            <small className={styles.hint}>Вы сможете изменить это позже в настройках</small>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="smuleProfile">Профиль Smule (опционально)</label>
+            <label htmlFor="smuleNickname">Ник в Smule (опционально)</label>
             <input
-              type="url"
-              id="smuleProfile"
-              name="smuleProfile"
-              value={formData.smuleProfile}
+              type="text"
+              id="smuleNickname"
+              name="smuleNickname"
+              value={formData.smuleNickname}
               onChange={handleChange}
               className={styles.input}
-              placeholder="https://www.smule.com/username"
+              placeholder="username"
               disabled={loading}
             />
-            {errors.smuleProfile && <span className={styles.error}>{errors.smuleProfile}</span>}
-            <small className={styles.hint}>Для верификации и повышения доверия</small>
+            {errors.smuleNickname && <span className={styles.error}>{errors.smuleNickname}</span>}
+            <small className={styles.hint}>Ваш ник из Smule для верификации. Ссылка будет: smule.com/ваш_ник</small>
           </div>
 
           <button type="submit" className={styles.button} disabled={loading}>

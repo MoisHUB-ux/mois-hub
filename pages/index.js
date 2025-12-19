@@ -11,6 +11,7 @@ export default function Home() {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [recentTracks, setRecentTracks] = useState([])
+  const [recentReviews, setRecentReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentPlaying, setCurrentPlaying] = useState(null)
   const [audioElement, setAudioElement] = useState(null)
@@ -18,6 +19,7 @@ export default function Home() {
   useEffect(() => {
     checkUser()
     loadRecentTracks()
+    loadRecentReviews()
 
     const audio = new Audio()
     setAudioElement(audio)
@@ -91,6 +93,35 @@ export default function Home() {
       setRecentTracks(data || [])
     } catch (error) {
       console.error('Ошибка загрузки треков:', error)
+    }
+  }
+
+  const loadRecentReviews = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select(`
+          *,
+          reviewer:reviewer_id (
+            id,
+            username,
+            reviewer_level,
+            smule_verified
+          ),
+          track:track_id (
+            id,
+            title,
+            author_id
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      if (error) throw error
+
+      setRecentReviews(data || [])
+    } catch (error) {
+      console.error('Ошибка загрузки рецензий:', error)
     }
   }
 
@@ -191,8 +222,28 @@ export default function Home() {
               {recentTracks.map(track => (
                 <div key={track.id} className={styles.trackCard}>
                   <div className={styles.trackHeader}>
-                    <h3>{track.title}</h3>
-                    <span className={styles.genre}>{track.genre}</span>
+                    <a 
+                      href={`/track/${track.id}`}
+                      style={{ textDecoration: 'none', color: 'inherit' }}
+                    >
+                      <h3>{track.title}</h3>
+                    </a>
+                    {track.tags && track.tags.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
+                        {track.tags.slice(0, 3).map((tag, i) => (
+                          <span key={i} style={{ 
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                            color: 'white', 
+                            padding: '2px 8px', 
+                            borderRadius: '10px', 
+                            fontSize: '0.75rem',
+                            fontWeight: '500'
+                          }}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <a 
@@ -214,6 +265,48 @@ export default function Home() {
                   >
                     {currentPlaying?.id === track.id ? '⏸️ Пауза' : '▶️ Играть'}
                   </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Последние рецензии */}
+        <section className={styles.recentReviews}>
+          <div className={styles.sectionHeader}>
+            <h2>💬 Новые рецензии</h2>
+          </div>
+
+          {recentReviews.length === 0 ? (
+            <p style={{ textAlign: 'center', color: '#718096' }}>Пока нет рецензий</p>
+          ) : (
+            <div className={styles.reviewsGrid}>
+              {recentReviews.map(review => (
+                <div key={review.id} className={styles.reviewCard}>
+                  <div className={styles.reviewHeader}>
+                    <a 
+                      href={`/profile/${review.reviewer?.username}`}
+                      style={{ textDecoration: 'none', color: 'inherit', fontWeight: '600' }}
+                    >
+                      {review.reviewer?.username || 'Аноним'} 
+                      {review.reviewer?.smule_verified && ' ✅'}
+                    </a>
+                    <span className={styles.reviewRating}>
+                      {'⭐'.repeat(review.rating)}
+                    </span>
+                  </div>
+                  <p className={styles.reviewComment}>
+                    {review.comment.length > 150 
+                      ? review.comment.substring(0, 150) + '...' 
+                      : review.comment
+                    }
+                  </p>
+                  <a 
+                    href={`/track/${review.track?.id}`}
+                    className={styles.reviewTrackLink}
+                  >
+                    🎵 {review.track?.title || 'Неизвестный трек'}
+                  </a>
                 </div>
               ))}
             </div>

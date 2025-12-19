@@ -3,35 +3,68 @@ import Head from 'next/head'
 import Header from '@components/Header'
 import Footer from '@components/Footer'
 import { supabase } from '../lib/supabase'
+import { ErrorHandler } from '../lib/errorHandler'
+import { Toast } from '../lib/toast'
 import styles from '@styles/Tracks.module.css'
+
+const TRACKS_PER_PAGE = 10
 
 export default function Tracks() {
   const [tracks, setTracks] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentPlaying, setCurrentPlaying] = useState(null)
   const [audioElement, setAudioElement] = useState(null)
-  const [filter, setFilter] = useState('all') // all, pop, rock, etc.
+  const [filter, setFilter] = useState('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalTracks, setTotalTracks] = useState(0)
+  const [hasMore, setHasMore] = useState(true)
 
   useEffect(() => {
     loadTracks()
 
-    // Создаём аудио элемент
     const audio = new Audio()
+    
+    const handleKeyPress = (e) => {
+      if (e.code === 'Space' && currentPlaying) {
+        e.preventDefault()
+        handlePlay(currentPlaying)
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeyPress)
     setAudioElement(audio)
 
     return () => {
       audio.pause()
       audio.src = ''
+      window.removeEventListener('keydown', handleKeyPress)
     }
-  }, [])
+  }, []) // Убрали loadTracks из зависимостей
 
   useEffect(() => {
-    loadTracks()
+    setCurrentPage(1)
+    loadTracks(1)
   }, [filter])
 
-  const loadTracks = async () => {
+  const loadTracks = async (page = currentPage, showToast = false) => {
     try {
       setLoading(true)
+
+      let countQuery = supabase
+        .from('tracks')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'approved')
+
+      if (filter !== 'all') {
+        countQuery = countQuery.eq('track_type', filter)
+      }
+
+      const { count } = await countQuery
+
+      setTotalTracks(count || 0)
+
+      const from = (page - 1) * TRACKS_PER_PAGE
+      const to = from + TRACKS_PER_PAGE - 1
 
       let query = supabase
         .from('tracks')
@@ -46,18 +79,29 @@ export default function Tracks() {
         `)
         .eq('status', 'approved')
         .order('created_at', { ascending: false })
+        .range(from, to)
 
       if (filter !== 'all') {
-        query = query.eq('genre', filter)
+        query = query.eq('track_type', filter)
       }
 
       const { data, error } = await query
 
-      if (error) throw error
+      if (error) {
+        ErrorHandler.handle(error, 'loadTracks')
+        return
+      }
 
       setTracks(data || [])
+      setHasMore((data || []).length === TRACKS_PER_PAGE)
+      setCurrentPage(page)
+      
+      // Показываем toast только при явном запросе
+      if (showToast && data && data.length > 0) {
+        Toast.success(`Загружено треков: ${data.length}`)
+      }
     } catch (error) {
-      console.error('Ошибка загрузки треков:', error)
+      ErrorHandler.handle(error, 'loadTracks')
     } finally {
       setLoading(false)
     }
@@ -67,35 +111,32 @@ export default function Tracks() {
     if (!audioElement) return
 
     if (currentPlaying?.id === track.id) {
-      // Пауза текущего трека
       audioElement.pause()
       setCurrentPlaying(null)
     } else {
-      // Воспроизведение нового трека
       audioElement.src = track.file_url
       audioElement.play()
       setCurrentPlaying(track)
-
-      // Обновляем счётчик прослушиваний
       updatePlayCount(track.id)
     }
   }
 
   const updatePlayCount = async (trackId) => {
     try {
-      const { data } = await supabase
-        .from('tracks')
-        .select('plays_count')
-        .eq('id', trackId)
-        .single()
+      const { error } = await supabase
+        .rpc('increment_plays_count', { track_id: trackId })
 
-      await supabase
-        .from('tracks')
-        .update({ plays_count: (data?.plays_count || 0) + 1 })
-        .eq('id', trackId)
+      if (error) {
+        ErrorHandler.handle(error, 'updatePlayCount')
+      }
     } catch (error) {
-      console.error('Ошибка обновления счётчика:', error)
+      ErrorHandler.handle(error, 'updatePlayCount')
     }
+  }
+
+  const handlePageChange = (newPage) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    loadTracks(newPage, true) // Показываем toast при смене страницы
   }
 
   const formatDate = (dateString) => {
@@ -111,22 +152,7 @@ export default function Tracks() {
     return (bytes / 1024 / 1024).toFixed(2) + ' МБ'
   }
 
-  const genres = [
-    { value: 'all', label: 'Все жанры' },
-    { value: 'pop', label: 'Pop' },
-    { value: 'rock', label: 'Rock' },
-    { value: 'hip-hop', label: 'Hip-Hop' },
-    { value: 'electronic', label: 'Electronic' },
-    { value: 'jazz', label: 'Jazz' },
-    { value: 'classical', label: 'Classical' },
-    { value: 'rnb', label: 'R&B' },
-    { value: 'country', label: 'Country' },
-    { value: 'reggae', label: 'Reggae' },
-    { value: 'blues', label: 'Blues' },
-    { value: 'folk', label: 'Folk' },
-    { value: 'metal', label: 'Metal' },
-    { value: 'other', label: 'Другое' }
-  ]
+  const totalPages = Math.ceil(totalTracks / TRACKS_PER_PAGE)
 
   return (
     <div className="container">
@@ -144,26 +170,25 @@ export default function Tracks() {
         </div>
 
         <div className={styles.filters}>
-          <label htmlFor="genre-filter">Фильтр по жанру:</label>
+          <label htmlFor="track-type-filter">Тип:</label>
           <select
-            id="genre-filter"
+            id="track-type-filter"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             className={styles.filterSelect}
+            aria-label="Выберите тип трека"
           >
-            {genres.map(genre => (
-              <option key={genre.value} value={genre.value}>
-                {genre.label}
-              </option>
-            ))}
+            <option value="all">Все треки</option>
+            <option value="original">Оригиналы</option>
+            <option value="cover">Каверы</option>
           </select>
           <span className={styles.trackCount}>
-            {tracks.length} {tracks.length === 1 ? 'трек' : 'треков'}
+            {totalTracks} {totalTracks === 1 ? 'трек' : 'треков'}
           </span>
         </div>
 
         {loading ? (
-          <div className={styles.loading}>
+          <div className={styles.loading} role="status" aria-live="polite">
             <p>Загрузка треков...</p>
           </div>
         ) : tracks.length === 0 ? (
@@ -175,76 +200,194 @@ export default function Tracks() {
             </a>
           </div>
         ) : (
-          <div className={styles.tracksList}>
-            {tracks.map((track) => (
-              <div key={track.id} className={styles.trackCard}>
-                <div className={styles.trackInfo}>
-                  <div className={styles.trackHeader}>
-                    <a href={`/track/${track.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                      <h3>{track.title}</h3>
-                    </a>
-                    <span className={styles.genre}>
-                      {genres.find(g => g.value === track.genre)?.label || track.genre}
-                    </span>
-                  </div>
-
-                  <div className={styles.author}>
-                    <a 
-                      href={`/profile/${track.profiles?.username}`}
-                      className={styles.authorLink}
-                      style={{ textDecoration: 'none', color: 'inherit' }}
-                    >
-                      <span>👤 {track.profiles?.username || 'Неизвестный автор'}</span>
-                      {track.profiles?.smule_verified && (
-                        <span className={styles.verified}>✅</span>
+          <>
+            <div className={styles.tracksList} role="list">
+              {tracks.map((track, index) => (
+                <div 
+                  key={track.id} 
+                  className={styles.trackCard}
+                  role="listitem"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handlePlay(track)
+                    }
+                  }}
+                >
+                  <div className={styles.trackInfo}>
+                    <div className={styles.trackHeader}>
+                      <a 
+                        href={`/track/${track.id}`} 
+                        style={{ textDecoration: 'none', color: 'inherit' }}
+                        aria-label={`Открыть страницу трека ${track.title}`}
+                      >
+                        <h3>
+                          {track.track_type === 'cover' && '🎤 '}
+                          {track.title}
+                        </h3>
+                      </a>
+                      {track.track_type === 'cover' && track.original_title && (
+                        <p style={{ 
+                          fontSize: '0.85rem', 
+                          color: '#718096', 
+                          marginTop: '4px',
+                          fontStyle: 'italic'
+                        }}>
+                          Кавер на: {track.original_title}
+                        </p>
                       )}
-                      <span className={styles.level}>
-                        ⭐ Ур. {track.profiles?.author_level || 1}
+                    </div>
+
+                    {track.tags && track.tags.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                        {track.tags.map((tag, i) => (
+                          <span key={i} style={{ 
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                            color: 'white', 
+                            padding: '4px 10px', 
+                            borderRadius: '12px', 
+                            fontSize: '0.8rem',
+                            fontWeight: '500'
+                          }}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className={styles.author}>
+                      <a 
+                        href={`/profile/${track.profiles?.username}`}
+                        className={styles.authorLink}
+                        style={{ textDecoration: 'none', color: 'inherit' }}
+                        aria-label={`Профиль автора ${track.profiles?.username || 'Неизвестный автор'}`}
+                      >
+                        <span>👤 {track.profiles?.username || 'Неизвестный автор'}</span>
+                        {track.profiles?.smule_verified && (
+                          <span className={styles.verified} aria-label="Верифицированный автор">✅</span>
+                        )}
+                        <span className={styles.level} aria-label={`Уровень ${track.profiles?.author_level || 1}`}>
+                          ⭐ Ур. {track.profiles?.author_level || 1}
+                        </span>
+                      </a>
+                    </div>
+
+                    {track.description && (
+                      <p className={styles.description}>{track.description}</p>
+                    )}
+
+                    <div className={styles.meta}>
+                      <span aria-label={`Дата публикации: ${formatDate(track.created_at)}`}>
+                        📅 {formatDate(track.created_at)}
                       </span>
+                      <span aria-label={`Прослушиваний: ${track.plays_count || 0}`}>
+                        ▶️ {track.plays_count || 0} прослушиваний
+                      </span>
+                      <span aria-label={`Рецензий: ${track.reviews_count || 0}`}>
+                        💬 {track.reviews_count || 0} рецензий
+                      </span>
+                      <span aria-label={`Размер файла: ${formatFileSize(track.file_size)}`}>
+                        📦 {formatFileSize(track.file_size)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.trackActions}>
+                    <button
+                      onClick={() => handlePlay(track)}
+                      className={`${styles.playButton} ${
+                        currentPlaying?.id === track.id ? styles.playing : ''
+                      }`}
+                      aria-label={
+                        currentPlaying?.id === track.id 
+                          ? `Поставить на паузу ${track.title}` 
+                          : `Воспроизвести ${track.title}`
+                      }
+                      aria-pressed={currentPlaying?.id === track.id}
+                    >
+                      {currentPlaying?.id === track.id ? '⏸️ Пауза' : '▶️ Играть'}
+                    </button>
+
+                    <a
+                      href={track.file_url}
+                      download
+                      className={styles.downloadButton}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Скачать трек ${track.title}`}
+                    >
+                      💾 Скачать
                     </a>
                   </div>
+                </div>
+              ))}
+            </div>
 
-                  {track.description && (
-                    <p className={styles.description}>{track.description}</p>
-                  )}
+            {/* Пагинация */}
+            {totalPages > 1 && (
+              <div className={styles.pagination} role="navigation" aria-label="Пагинация треков">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={styles.paginationButton}
+                  aria-label="Предыдущая страница"
+                >
+                  ← Назад
+                </button>
 
-                  <div className={styles.meta}>
-                    <span>📅 {formatDate(track.created_at)}</span>
-                    <span>▶️ {track.plays_count || 0} прослушиваний</span>
-                    <span>💬 {track.reviews_count || 0} рецензий</span>
-                    <span>📦 {formatFileSize(track.file_size)}</span>
-                  </div>
+                <div className={styles.paginationPages}>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+                    // Показываем только ближайшие страницы
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 2 && page <= currentPage + 2)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`${styles.paginationButton} ${
+                            page === currentPage ? styles.active : ''
+                          }`}
+                          aria-label={`Страница ${page}`}
+                          aria-current={page === currentPage ? 'page' : undefined}
+                        >
+                          {page}
+                        </button>
+                      )
+                    } else if (
+                      page === currentPage - 3 ||
+                      page === currentPage + 3
+                    ) {
+                      return <span key={page} className={styles.paginationEllipsis}>...</span>
+                    }
+                    return null
+                  })}
                 </div>
 
-                <div className={styles.trackActions}>
-                  <button
-                    onClick={() => handlePlay(track)}
-                    className={`${styles.playButton} ${
-                      currentPlaying?.id === track.id ? styles.playing : ''
-                    }`}
-                  >
-                    {currentPlaying?.id === track.id ? '⏸️ Пауза' : '▶️ Играть'}
-                  </button>
-
-                  <a
-                    href={track.file_url}
-                    download
-                    className={styles.downloadButton}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    💾 Скачать
-                  </a>
-                </div>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className={styles.paginationButton}
+                  aria-label="Следующая страница"
+                >
+                  Вперёд →
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
 
         {currentPlaying && (
-          <div className={styles.nowPlaying}>
+          <div 
+            className={styles.nowPlaying}
+            role="region"
+            aria-label="Сейчас играет"
+            aria-live="polite"
+          >
             <div className={styles.nowPlayingContent}>
-              <span className={styles.nowPlayingIcon}>🎵</span>
+              <span className={styles.nowPlayingIcon} aria-hidden="true">🎵</span>
               <div>
                 <div className={styles.nowPlayingTitle}>{currentPlaying.title}</div>
                 <div className={styles.nowPlayingArtist}>
@@ -255,6 +398,7 @@ export default function Tracks() {
             <button
               onClick={() => handlePlay(currentPlaying)}
               className={styles.nowPlayingButton}
+              aria-label="Поставить на паузу"
             >
               ⏸️
             </button>

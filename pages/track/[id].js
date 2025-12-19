@@ -196,7 +196,12 @@ export default function TrackDetail() {
 
         <div className={styles.reviewsSection}>
           <h2 className={styles.sectionTitle}>💬 Рецензии</h2>
-          {currentUser && track.status === 'approved' && <ReviewForm trackId={track.id} onReviewAdded={() => loadTrack()} />}
+          {currentUser && track.status === 'approved' && track.author_id !== currentUser.id && (
+            <ReviewForm trackId={track.id} trackAuthorId={track.author_id} onReviewAdded={() => loadTrack()} />
+          )}
+          {currentUser && track.author_id === currentUser.id && (
+            <div className={styles.loginPrompt}>Вы не можете рецензировать свой собственный трек</div>
+          )}
           {!currentUser && <div className={styles.loginPrompt}><a href="/login">Войдите</a>, чтобы оставить рецензию</div>}
           <ReviewsList trackId={track.id} newReview={newReview} />
         </div>

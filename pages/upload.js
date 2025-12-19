@@ -4,6 +4,8 @@ import Head from 'next/head'
 import Header from '@components/Header'
 import Footer from '@components/Footer'
 import { supabase } from '../lib/supabase'
+import { rateLimit } from '../lib/rateLimiter'
+import { validateAudioFile } from '../lib/fileValidation'
 import styles from '@styles/Upload.module.css'
 
 export default function Upload() {
@@ -14,21 +16,22 @@ export default function Upload() {
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   
+  const [uploadMode, setUploadMode] = useState('file') // 'file' or 'smule'
+  const [smuleUrl, setSmuleUrl] = useState('')
+  const [smuleFetching, setSmuleFetching] = useState(false)
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    genre: 'pop',
+    tags: '',
+    trackType: 'original',
+    originalTitle: '',
     file: null,
     coverImage: null,
     lyrics: ''
   })
   const [errors, setErrors] = useState({})
   const [coverPreview, setCoverPreview] = useState(null)
-
-  const genres = [
-    'pop', 'rock', 'hip-hop', 'electronic', 'jazz', 'classical',
-    'rnb', 'country', 'reggae', 'blues', 'folk', 'metal', 'other'
-  ]
 
   useEffect(() => {
     checkUser()
@@ -86,12 +89,21 @@ export default function Upload() {
 
     const newErrors = {}
 
-    if (!file.type.includes('audio')) {
-      newErrors.file = 'Выберите аудио файл (MP3, WAV, OGG и т.д.)'
+    // Проверяем MIME-тип И расширение (для мобильных)
+    const allowedExtensions = ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac', 'webm']
+    const fileExtension = file.name.split('.').pop().toLowerCase()
+    const isAudio = file.type.includes('audio') || allowedExtensions.includes(fileExtension)
+
+    if (!isAudio) {
+      newErrors.file = 'Выберите аудио файл (MP3, WAV, OGG, M4A, AAC)'
     }
 
     if (file.size > 50 * 1024 * 1024) {
       newErrors.file = 'Размер файла не должен превышать 50 МБ'
+    }
+
+    if (file.size === 0) {
+      newErrors.file = 'Файл пустой или повреждён'
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -152,17 +164,105 @@ export default function Upload() {
     }
   }
 
+  const handleSmuleImport = async () => {
+    if (!smuleUrl) {
+      setErrors({ smuleUrl: 'Введите URL записи Smule' })
+      return
+    }
+
+    setSmuleFetching(true)
+    setErrors({})
+
+    try {
+      const response = await fetch('/api/smule-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recordingUrl: smuleUrl })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Ошибка импорта')
+      }
+
+      // Скачиваем аудио файл
+      const audioResponse = await fetch(data.audioUrl)
+      const audioBlob = await audioResponse.blob()
+      const audioFile = new File([audioBlob], `${data.title}.m4a`, { type: 'audio/mp4' })
+
+      // Скачиваем обложку если есть
+      let coverFile = null
+      if (data.coverUrl) {
+        try {
+          const coverResponse = await fetch(data.coverUrl)
+          const coverBlob = await coverResponse.blob()
+          coverFile = new File([coverBlob], `${data.title}-cover.jpg`, { type: 'image/jpeg' })
+          
+          // Создаём превью обложки
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            setCoverPreview(reader.result)
+          }
+          reader.readAsDataURL(coverFile)
+        } catch (err) {
+          console.error('Ошибка загрузки обложки:', err)
+        }
+      }
+
+      // Заполняем форму
+      setFormData({
+        ...formData,
+        title: data.title || '',
+        description: `Исполнитель: ${data.performerName || 'Неизвестен'}\nОригинальный трек: ${data.artist || 'Неизвестен'}`,
+        file: audioFile,
+        coverImage: coverFile,
+        trackType: 'cover',
+        originalTitle: data.artist || ''
+      })
+
+      alert('✅ Трек успешно импортирован со Smule!')
+    } catch (error) {
+      console.error('Ошибка импорта со Smule:', error)
+      setErrors({ smuleUrl: error.message })
+    } finally {
+      setSmuleFetching(false)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     
     setErrors({})
     const newErrors = {}
 
+    // Rate limiting
+    const rateLimitResult = rateLimit(user.id, 5, 60000)
+    if (!rateLimitResult.success) {
+      const waitMinutes = Math.ceil((rateLimitResult.resetTime - Date.now()) / 60000)
+      newErrors.general = `Слишком много загрузок. Подождите ${waitMinutes} мин.`
+      setErrors(newErrors)
+      return
+    }
+
+    // Валидация названия
     if (!formData.title || formData.title.length < 3) {
       newErrors.title = 'Название должно быть не менее 3 символов'
     }
+
+    // Валидация для каверов
+    if (formData.trackType === 'cover' && !formData.originalTitle) {
+      newErrors.originalTitle = 'Укажите название оригинала для кавера'
+    }
+
+    // Валидация файла
     if (!formData.file) {
       newErrors.file = 'Выберите аудио файл'
+    } else {
+      const validation = validateAudioFile(formData.file)
+      if (!validation.valid) {
+        newErrors.file = validation.errors.join(', ')
+      }
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -210,7 +310,6 @@ export default function Upload() {
 
         if (coverUploadError) {
           console.error('Ошибка загрузки обложки:', coverUploadError)
-          // Continue without cover if upload fails
         } else {
           const { data: { publicUrl: coverPublicUrl } } = supabase.storage
             .from('tracks')
@@ -221,6 +320,13 @@ export default function Upload() {
 
       setUploadProgress(75)
 
+      // Обрабатываем теги: разделяем по пробелам и убираем пустые
+      const tagsArray = formData.tags
+        .split(' ')
+        .map(tag => tag.trim().toLowerCase())
+        .filter(tag => tag.length > 0)
+        .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
+
       const { data: trackData, error: dbError } = await supabase
         .from('tracks')
         .insert([
@@ -228,7 +334,9 @@ export default function Upload() {
             author_id: user.id,
             title: formData.title,
             description: formData.description || null,
-            genre: formData.genre,
+            tags: tagsArray,
+            track_type: formData.trackType,
+            original_title: formData.trackType === 'cover' ? formData.originalTitle : null,
             file_url: publicUrl,
             file_size: formData.file.size,
             cover_url: coverUrl,
@@ -243,13 +351,11 @@ export default function Upload() {
 
       setUploadProgress(100)
 
-      await supabase
-        .from('profiles')
-        .update({
-          total_tracks: profile.total_tracks + 1,
-          author_xp: profile.author_xp + 10
-        })
-        .eq('id', user.id)
+      await supabase.rpc('increment_profile_stats', {
+        profile_id: user.id,
+        tracks_delta: 1,
+        xp_delta: 10
+      })
 
       alert('✅ Трек успешно загружен! Ожидает модерации.')
       router.push('/')
@@ -294,6 +400,129 @@ export default function Upload() {
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+          {/* Переключатель режима загрузки */}
+          <div style={{ marginBottom: '2rem', borderBottom: '2px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                type="button"
+                onClick={() => setUploadMode('file')}
+                disabled={uploading}
+                style={{
+                  flex: 1,
+                  padding: '12px 24px',
+                  border: 'none',
+                  background: uploadMode === 'file' 
+                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+                    : 'transparent',
+                  color: uploadMode === 'file' ? 'white' : '#718096',
+                  fontWeight: '600',
+                  cursor: uploading ? 'not-allowed' : 'pointer',
+                  borderRadius: '8px 8px 0 0',
+                  fontSize: '1rem',
+                  transition: 'all 0.3s',
+                  position: 'relative',
+                  bottom: '-2px'
+                }}
+              >
+                📁 Загрузить файл
+              </button>
+              <button
+                type="button"
+                onClick={() => setUploadMode('smule')}
+                disabled={uploading}
+                style={{
+                  flex: 1,
+                  padding: '12px 24px',
+                  border: 'none',
+                  background: uploadMode === 'smule' 
+                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+                    : 'transparent',
+                  color: uploadMode === 'smule' ? 'white' : '#718096',
+                  fontWeight: '600',
+                  cursor: uploading ? 'not-allowed' : 'pointer',
+                  borderRadius: '8px 8px 0 0',
+                  fontSize: '1rem',
+                  transition: 'all 0.3s',
+                  position: 'relative',
+                  bottom: '-2px'
+                }}
+              >
+                🎤 Импорт со Smule
+              </button>
+            </div>
+          </div>
+
+          {/* Блок импорта со Smule */}
+          {uploadMode === 'smule' && (
+            <div style={{ 
+              background: '#f7fafc', 
+              padding: '1.5rem', 
+              borderRadius: '8px', 
+              marginBottom: '2rem',
+              border: '2px dashed #cbd5e0'
+            }}>
+              <h3 style={{ marginTop: 0, marginBottom: '1rem', color: '#2d3748' }}>
+                🎵 Импорт записи со Smule
+              </h3>
+              <p style={{ color: '#718096', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                Вставьте ссылку на запись со Smule (например: https://www.smule.com/sing-recording/...)
+              </p>
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '1rem' }}>
+                <input
+                  type="text"
+                  value={smuleUrl}
+                  onChange={(e) => setSmuleUrl(e.target.value)}
+                  placeholder="https://www.smule.com/sing-recording/..."
+                  disabled={smuleFetching || uploading}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    border: '1px solid #cbd5e0',
+                    borderRadius: '6px',
+                    fontSize: '1rem'
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleSmuleImport}
+                  disabled={smuleFetching || uploading || !smuleUrl}
+                  style={{
+                    padding: '12px 24px',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontWeight: '600',
+                    cursor: (smuleFetching || uploading || !smuleUrl) ? 'not-allowed' : 'pointer',
+                    opacity: (smuleFetching || uploading || !smuleUrl) ? 0.5 : 1
+                  }}
+                >
+                  {smuleFetching ? '⏳ Загрузка...' : '✨ Импорт'}
+                </button>
+              </div>
+              {errors.smuleUrl && (
+                <div style={{ color: '#e53e3e', fontSize: '0.9rem', marginTop: '8px' }}>
+                  ❌ {errors.smuleUrl}
+                </div>
+              )}
+              <div style={{ 
+                background: 'white', 
+                padding: '12px', 
+                borderRadius: '6px', 
+                fontSize: '0.85rem',
+                color: '#4a5568'
+              }}>
+                <strong>ℹ️ Как это работает:</strong>
+                <ol style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+                  <li>Найдите свою запись на Smule.com</li>
+                  <li>Скопируйте URL записи из адресной строки</li>
+                  <li>Вставьте сюда и нажмите "Импорт"</li>
+                  <li>Трек и обложка загрузятся автоматически!</li>
+                </ol>
+              </div>
+            </div>
+          )}
+
           {errors.general && (
             <div style={{ 
               color: '#e53e3e', 
@@ -363,41 +592,116 @@ export default function Upload() {
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="genre">Жанр *</label>
+            <label htmlFor="trackType">Тип трека *</label>
             <select
-              id="genre"
-              name="genre"
-              value={formData.genre}
+              id="trackType"
+              name="trackType"
+              value={formData.trackType}
               onChange={handleChange}
               className={styles.input}
               disabled={uploading}
             >
-              {genres.map(genre => (
-                <option key={genre} value={genre}>
-                  {genre.charAt(0).toUpperCase() + genre.slice(1)}
-                </option>
-              ))}
+              <option value="original">Оригинальный трек</option>
+              <option value="cover">Кавер</option>
             </select>
           </div>
 
+          {formData.trackType === 'cover' && (
+            <div className={styles.formGroup}>
+              <label htmlFor="originalTitle">Название оригинала *</label>
+              <input
+                type="text"
+                id="originalTitle"
+                name="originalTitle"
+                value={formData.originalTitle}
+                onChange={handleChange}
+                className={styles.input}
+                placeholder="Исполнитель - Название песни"
+                disabled={uploading}
+              />
+              <small className={styles.hint}>Укажите автора и название оригинальной песни</small>
+              {errors.originalTitle && <span className={styles.error}>{errors.originalTitle}</span>}
+            </div>
+          )}
+
           <div className={styles.formGroup}>
-            <label htmlFor="file">Аудио файл * (макс. 50 МБ)</label>
+            <label htmlFor="tags">Теги *</label>
+            <div style={{ 
+              background: '#f7fafc', 
+              padding: '10px 12px', 
+              borderRadius: '6px', 
+              marginBottom: '8px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#4a5568' }}>
+                💡 Пишите через <strong>#слово пробел</strong> — Пример: <code style={{ background: '#fff', padding: '2px 6px', borderRadius: '4px' }}>#pop #love #romantic</code>
+              </p>
+            </div>
             <input
-              type="file"
-              id="file"
-              name="file"
-              accept="audio/*"
-              onChange={handleFileChange}
-              className={styles.fileInput}
+              type="text"
+              id="tags"
+              name="tags"
+              value={formData.tags}
+              onChange={handleChange}
+              className={styles.input}
+              placeholder="pop love romantic"
               disabled={uploading}
             />
-            {formData.file && (
-              <p style={{ color: '#48bb78', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                ✓ Выбран: {formData.file.name} ({(formData.file.size / 1024 / 1024).toFixed(2)} МБ)
-              </p>
+            {formData.tags && (
+              <div style={{ marginTop: '8px' }}>
+                <p style={{ fontSize: '0.85rem', color: '#718096', marginBottom: '6px' }}>Предпросмотр тегов:</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {formData.tags.split(' ').filter(t => t.trim()).map((tag, i) => (
+                    <span key={i} style={{ 
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                      color: 'white', 
+                      padding: '4px 10px', 
+                      borderRadius: '12px', 
+                      fontSize: '0.85rem',
+                      fontWeight: '500'
+                    }}>
+                      {tag.startsWith('#') ? tag : `#${tag}`}
+                    </span>
+                  ))}
+                </div>
+              </div>
             )}
-            {errors.file && <span className={styles.error}>{errors.file}</span>}
           </div>
+
+          {uploadMode === 'file' && (
+            <div className={styles.formGroup}>
+              <label htmlFor="file">Аудио файл * (макс. 50 МБ)</label>
+              <input
+                type="file"
+                id="file"
+                name="file"
+                accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.flac,.webm"
+                onChange={handleFileChange}
+                className={styles.fileInput}
+                disabled={uploading}
+              />
+              {formData.file && (
+                <p style={{ color: '#48bb78', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                  ✓ Выбран: {formData.file.name} ({(formData.file.size / 1024 / 1024).toFixed(2)} МБ)
+                </p>
+              )}
+              {errors.file && <span className={styles.error}>{errors.file}</span>}
+            </div>
+          )}
+
+          {uploadMode === 'smule' && formData.file && (
+            <div style={{ 
+              background: '#f0fff4', 
+              padding: '12px', 
+              borderRadius: '6px', 
+              marginBottom: '1rem',
+              border: '1px solid #9ae6b4'
+            }}>
+              <p style={{ color: '#22543d', margin: 0, fontSize: '0.9rem' }}>
+                ✅ Трек импортирован: <strong>{formData.file.name}</strong> ({(formData.file.size / 1024 / 1024).toFixed(2)} МБ)
+              </p>
+            </div>
+          )}
 
           <div className={styles.formGroup}>
             <label htmlFor="coverImage">Обложка трека (опционально, макс. 5 МБ)</label>

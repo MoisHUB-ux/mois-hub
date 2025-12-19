@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import styles from '@styles/ReviewForm.module.css'
 
-export default function ReviewForm({ trackId, onReviewAdded }) {
+export default function ReviewForm({ trackId, trackAuthorId, onReviewAdded }) {
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
   const [loading, setLoading] = useState(false)
@@ -28,6 +28,12 @@ export default function ReviewForm({ trackId, onReviewAdded }) {
       
       if (!session?.user) {
         alert('❌ Необходимо войти в систему')
+        return
+      }
+
+      // Проверяем, что пользователь не автор трека
+      if (trackAuthorId && session.user.id === trackAuthorId) {
+        alert('❌ Нельзя рецензировать свои собственные треки')
         return
       }
 

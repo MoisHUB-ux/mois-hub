@@ -6,6 +6,7 @@ export default function ReviewsList({ trackId, newReview }) {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState(null)
+  const [userLikes, setUserLikes] = useState(new Set())
 
   useEffect(() => {
     checkUser()
@@ -48,10 +49,72 @@ export default function ReviewsList({ trackId, newReview }) {
       if (error) throw error
 
       setReviews(data || [])
+
+      // Загружаем лайки текущего пользователя
+      if (currentUser) {
+        const reviewIds = data.map(r => r.id)
+        const { data: likesData } = await supabase
+          .from('review_likes')
+          .select('review_id')
+          .eq('user_id', currentUser.id)
+          .in('review_id', reviewIds)
+
+        if (likesData) {
+          setUserLikes(new Set(likesData.map(l => l.review_id)))
+        }
+      }
     } catch (error) {
       console.error('Ошибка загрузки рецензий:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleLike = async (reviewId) => {
+    if (!currentUser) {
+      alert('❌ Необходимо войти, чтобы лайкать рецензии')
+      return
+    }
+
+    try {
+      const isLiked = userLikes.has(reviewId)
+
+      if (isLiked) {
+        // Убираем лайк
+        const { error } = await supabase
+          .from('review_likes')
+          .delete()
+          .eq('review_id', reviewId)
+          .eq('user_id', currentUser.id)
+
+        if (error) throw error
+
+        setUserLikes(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(reviewId)
+          return newSet
+        })
+
+        setReviews(reviews.map(r => 
+          r.id === reviewId ? { ...r, likes_count: (r.likes_count || 0) - 1 } : r
+        ))
+      } else {
+        // Ставим лайк
+        const { error } = await supabase
+          .from('review_likes')
+          .insert([{ review_id: reviewId, user_id: currentUser.id }])
+
+        if (error) throw error
+
+        setUserLikes(prev => new Set([...prev, reviewId]))
+
+        setReviews(reviews.map(r => 
+          r.id === reviewId ? { ...r, likes_count: (r.likes_count || 0) + 1 } : r
+        ))
+      }
+    } catch (error) {
+      console.error('Ошибка при лайке:', error)
+      alert('❌ Ошибка при обработке лайка')
     }
   }
 
@@ -169,16 +232,25 @@ export default function ReviewsList({ trackId, newReview }) {
 
               <p className={styles.reviewComment}>{review.comment}</p>
 
-              {currentUser && currentUser.id === review.reviewer_id && (
-                <div className={styles.reviewActions}>
+              <div className={styles.reviewFooter}>
+                <button
+                  onClick={() => handleLike(review.id)}
+                  className={`${styles.likeButton} ${userLikes.has(review.id) ? styles.liked : ''}`}
+                  disabled={!currentUser}
+                  title={currentUser ? (userLikes.has(review.id) ? 'Убрать лайк' : 'Лайкнуть') : 'Войдите, чтобы лайкать'}
+                >
+                  {userLikes.has(review.id) ? '❤️' : '🤍'} {review.likes_count || 0}
+                </button>
+
+                {currentUser && currentUser.id === review.reviewer_id && (
                   <button
                     onClick={() => handleDelete(review.id)}
                     className={styles.deleteButton}
                   >
                     🗑️ Удалить
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           ))}
         </div>

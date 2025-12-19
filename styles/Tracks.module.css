@@ -290,6 +290,60 @@
   color: #667eea;
 }
 
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 40px;
+  padding: 20px;
+}
+
+.paginationPages {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.paginationButton {
+  padding: 10px 15px;
+  border: 2px solid #333;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  min-width: 45px;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+  transform: translateY(-2px);
+}
+
+.paginationButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.paginationButton.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+}
+
+.paginationEllipsis {
+  padding: 0 10px;
+  color: #666;
+}
+
+.trackCount {
+  color: #666;
+  font-size: 14px;
+}
+
 @media (max-width: 768px) {
   .header h1 {
     font-size: 2rem;
@@ -322,5 +376,15 @@
     flex-direction: column;
     gap: 0.5rem;
     align-items: flex-start;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+  }
+
+  .paginationButton {
+    padding: 8px 12px;
+    min-width: 40px;
+    font-size: 14px;
   }
 }
