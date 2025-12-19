@@ -187,26 +187,50 @@ export default function Upload() {
       }
 
       // Скачиваем аудио файл
-      const audioResponse = await fetch(data.audioUrl)
-      const audioBlob = await audioResponse.blob()
-      const audioFile = new File([audioBlob], `${data.title}.m4a`, { type: 'audio/mp4' })
+      let audioFile = null
+      try {
+        const audioResponse = await fetch(data.audioUrl, {
+          mode: 'cors',
+          credentials: 'omit'
+        })
+        
+        if (!audioResponse.ok) {
+          throw new Error('Не удалось загрузить аудио')
+        }
+        
+        const audioBlob = await audioResponse.blob()
+        audioFile = new File([audioBlob], `${data.title}.m4a`, { type: 'audio/mp4' })
+      } catch (audioError) {
+        console.error('Ошибка загрузки аудио:', audioError)
+        // Показываем пользователю прямую ссылку
+        alert(`⚠️ Автозагрузка не удалась.\n\nСкачайте аудио вручную:\n${data.audioUrl}\n\nПотом загрузите через "Загрузить файл"`)
+        setSmuleFetching(false)
+        return
+      }
 
       // Скачиваем обложку если есть
       let coverFile = null
       if (data.coverUrl) {
         try {
-          const coverResponse = await fetch(data.coverUrl)
-          const coverBlob = await coverResponse.blob()
-          coverFile = new File([coverBlob], `${data.title}-cover.jpg`, { type: 'image/jpeg' })
+          const coverResponse = await fetch(data.coverUrl, {
+            mode: 'cors',
+            credentials: 'omit'
+          })
           
-          // Создаём превью обложки
-          const reader = new FileReader()
-          reader.onloadend = () => {
-            setCoverPreview(reader.result)
+          if (coverResponse.ok) {
+            const coverBlob = await coverResponse.blob()
+            coverFile = new File([coverBlob], `${data.title}-cover.jpg`, { type: 'image/jpeg' })
+            
+            // Создаём превью обложки
+            const reader = new FileReader()
+            reader.onloadend = () => {
+              setCoverPreview(reader.result)
+            }
+            reader.readAsDataURL(coverFile)
           }
-          reader.readAsDataURL(coverFile)
         } catch (err) {
           console.error('Ошибка загрузки обложки:', err)
+          // Обложка не критична, продолжаем
         }
       }
 
@@ -224,7 +248,13 @@ export default function Upload() {
       alert('✅ Трек успешно импортирован со Smule!')
     } catch (error) {
       console.error('Ошибка импорта со Smule:', error)
-      setErrors({ smuleUrl: error.message })
+      
+      // Показываем более информативное сообщение
+      const errorMsg = error.message.includes('CORS') 
+        ? 'Smule блокирует прямую загрузку. Скачайте файл вручную и загрузите через "Загрузить файл"'
+        : error.message
+      
+      setErrors({ smuleUrl: `❌ ${errorMsg}` })
     } finally {
       setSmuleFetching(false)
     }
@@ -510,7 +540,8 @@ export default function Upload() {
                 padding: '12px', 
                 borderRadius: '6px', 
                 fontSize: '0.85rem',
-                color: '#4a5568'
+                color: '#4a5568',
+                marginBottom: '12px'
               }}>
                 <strong>ℹ️ Как это работает:</strong>
                 <ol style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
@@ -519,6 +550,24 @@ export default function Upload() {
                   <li>Вставьте сюда и нажмите "Импорт"</li>
                   <li>Трек и обложка загрузятся автоматически!</li>
                 </ol>
+              </div>
+              <div style={{ 
+                background: '#fff5e5', 
+                padding: '12px', 
+                borderRadius: '6px', 
+                fontSize: '0.85rem',
+                color: '#c05621',
+                border: '1px solid #fbd38d'
+              }}>
+                <strong>⚠️ Если автоимпорт не работает:</strong>
+                <ol style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+                  <li>Откройте запись на Smule.com в браузере</li>
+                  <li>Скачайте аудио вручную (обычно кнопка "Download" или через DevTools)</li>
+                  <li>Вернитесь сюда и используйте вкладку "📁 Загрузить файл"</li>
+                </ol>
+                <p style={{ margin: '8px 0 0 0', fontSize: '0.8rem' }}>
+                  💡 <strong>Совет:</strong> Для скачивания через DevTools: F12 → Network → обновите страницу → найдите .m4a файл → Save
+                </p>
               </div>
             </div>
           )}
