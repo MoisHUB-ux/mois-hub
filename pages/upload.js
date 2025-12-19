@@ -487,7 +487,7 @@ export default function Upload() {
 
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#2d3748' }}>
-                  Session Cookie * 
+                  Cookies * (все cookies со Smule.com)
                   <button 
                     type="button"
                     onClick={() => setShowCookieHelp(!showCookieHelp)}
@@ -503,19 +503,20 @@ export default function Upload() {
                     {showCookieHelp ? '▼' : '▶'} Как получить?
                   </button>
                 </label>
-                <input
-                  type="text"
+                <textarea
                   value={smuleCookie}
                   onChange={(e) => setSmuleCookie(e.target.value)}
-                  placeholder="smule_session=ваш_cookie_здесь..."
+                  placeholder="session=...; user_id=...; _csrf=...; (вставьте все cookies из браузера)"
                   disabled={smuleFetching}
+                  rows={3}
                   style={{
                     width: '100%',
                     padding: '12px',
                     border: '1px solid #cbd5e0',
                     borderRadius: '6px',
-                    fontSize: '0.9rem',
-                    fontFamily: 'monospace'
+                    fontSize: '0.85rem',
+                    fontFamily: 'monospace',
+                    resize: 'vertical'
                   }}
                 />
               </div>
@@ -528,18 +529,26 @@ export default function Upload() {
                   marginBottom: '1rem',
                   border: '1px solid #91d5ff'
                 }}>
-                  <strong>📖 Как получить session cookie:</strong>
+                  <strong>📖 Как получить cookies (ПОЛНЫЕ):</strong>
                   <ol style={{ margin: '8px 0 0 0', paddingLeft: '20px', fontSize: '0.9rem' }}>
                     <li>Откройте <a href="https://www.smule.com" target="_blank" rel="noopener">smule.com</a> и войдите в аккаунт</li>
-                    <li>Откройте DevTools: <code>F12</code> или <code>Ctrl+Shift+I</code></li>
-                    <li>Перейдите во вкладку <strong>Application</strong> (Chrome) или <strong>Storage</strong> (Firefox)</li>
-                    <li>Найдите <strong>Cookies</strong> → <strong>https://www.smule.com</strong></li>
-                    <li>Найдите cookie с именем <code>smule_session</code> или <code>SMULE_AUTH</code></li>
-                    <li>Скопируйте полное значение cookie (имя=значение)</li>
-                    <li>Вставьте сюда</li>
+                    <li>Откройте DevTools: <code>F12</code> → вкладка <strong>Network</strong></li>
+                    <li>Обновите страницу (<code>F5</code>), кликните на любой запрос</li>
+                    <li>Во вкладке <strong>Headers</strong> найдите <strong>Request Headers</strong></li>
+                    <li>Найдите строку <strong>Cookie:</strong> и скопируйте ВСЁ значение после неё</li>
+                    <li>Должно выглядеть так: <code style={{fontSize: '0.75rem'}}>session=...; user_id=...; _csrf=...</code></li>
+                    <li>Вставьте всю строку cookies сюда</li>
                   </ol>
+                  <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', marginTop: '12px', border: '1px solid #d9d9d9' }}>
+                    <strong>💡 Альтернативный способ (проще):</strong>
+                    <ol style={{ margin: '8px 0 0 0', paddingLeft: '20px', fontSize: '0.85rem' }}>
+                      <li>Откройте консоль браузера (<code>F12</code> → <strong>Console</strong>)</li>
+                      <li>Вставьте и выполните: <code style={{background: '#f5f5f5', padding: '2px 6px'}}>document.cookie</code></li>
+                      <li>Скопируйте весь результат и вставьте сюда</li>
+                    </ol>
+                  </div>
                   <p style={{ margin: '12px 0 0 0', fontSize: '0.85rem', color: '#595959' }}>
-                    🔒 <strong>Безопасность:</strong> Cookie остаётся только на вашем устройстве и используется один раз для загрузки трека
+                    🔒 <strong>Безопасность:</strong> Cookies используются только для одного запроса и не сохраняются
                   </p>
                 </div>
               )}
