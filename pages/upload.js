@@ -16,6 +16,12 @@ export default function Upload() {
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   
+  const [uploadMode, setUploadMode] = useState('file') // 'file' or 'smule'
+  const [smuleUrl, setSmuleUrl] = useState('')
+  const [smuleCookie, setSmuleCookie] = useState('')
+  const [smuleFetching, setSmuleFetching] = useState(false)
+  const [showCookieHelp, setShowCookieHelp] = useState(false)
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -157,6 +163,82 @@ export default function Upload() {
       const newErrors = { ...errors }
       delete newErrors.coverImage
       setErrors(newErrors)
+    }
+  }
+
+  const handleSmuleImport = async () => {
+    if (!smuleUrl) {
+      alert('❌ Введите URL записи Smule')
+      return
+    }
+
+    if (!smuleCookie) {
+      alert('⚠️ Добавьте ваш session cookie для доступа к Smule API')
+      setShowCookieHelp(true)
+      return
+    }
+
+    setSmuleFetching(true)
+
+    try {
+      const response = await fetch('/api/smule-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          recordingUrl: smuleUrl,
+          cookie: smuleCookie 
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Ошибка импорта')
+      }
+
+      // Скачиваем аудио
+      const audioResponse = await fetch(data.audioUrl)
+      if (!audioResponse.ok) throw new Error('Не удалось загрузить аудио')
+      
+      const audioBlob = await audioResponse.blob()
+      const audioFile = new File([audioBlob], `${data.title}.m4a`, { type: 'audio/mp4' })
+
+      // Скачиваем обложку
+      let coverFile = null
+      if (data.coverUrl) {
+        try {
+          const coverResponse = await fetch(data.coverUrl)
+          if (coverResponse.ok) {
+            const coverBlob = await coverResponse.blob()
+            coverFile = new File([coverBlob], `${data.title}-cover.jpg`, { type: 'image/jpeg' })
+            
+            const reader = new FileReader()
+            reader.onloadend = () => setCoverPreview(reader.result)
+            reader.readAsDataURL(coverFile)
+          }
+        } catch (err) {
+          console.error('Ошибка загрузки обложки:', err)
+        }
+      }
+
+      // Заполняем форму
+      setFormData({
+        ...formData,
+        title: data.title || '',
+        description: `Исполнитель: ${data.performerName || 'Неизвестен'}\nОригинал: ${data.artist || 'Неизвестен'}`,
+        file: audioFile,
+        coverImage: coverFile,
+        trackType: 'cover',
+        originalTitle: data.artist || ''
+      })
+
+      alert('✅ Трек успешно импортирован!')
+      setUploadMode('file') // Переключаем на режим файла
+    } catch (error) {
+      console.error('Ошибка импорта:', error)
+      alert(`❌ ${error.message}`)
+    } finally {
+      setSmuleFetching(false)
     }
   }
 
@@ -330,6 +412,160 @@ export default function Upload() {
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+          {/* Переключатель режима */}
+          <div style={{ marginBottom: '2rem', borderBottom: '2px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                type="button"
+                onClick={() => setUploadMode('file')}
+                disabled={uploading}
+                style={{
+                  flex: 1,
+                  padding: '12px 24px',
+                  border: 'none',
+                  background: uploadMode === 'file' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent',
+                  color: uploadMode === 'file' ? 'white' : '#718096',
+                  fontWeight: '600',
+                  cursor: uploading ? 'not-allowed' : 'pointer',
+                  borderRadius: '8px 8px 0 0',
+                  fontSize: '1rem',
+                  transition: 'all 0.3s',
+                  position: 'relative',
+                  bottom: '-2px'
+                }}
+              >
+                📁 Загрузить файл
+              </button>
+              <button
+                type="button"
+                onClick={() => setUploadMode('smule')}
+                disabled={uploading}
+                style={{
+                  flex: 1,
+                  padding: '12px 24px',
+                  border: 'none',
+                  background: uploadMode === 'smule' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent',
+                  color: uploadMode === 'smule' ? 'white' : '#718096',
+                  fontWeight: '600',
+                  cursor: uploading ? 'not-allowed' : 'pointer',
+                  borderRadius: '8px 8px 0 0',
+                  fontSize: '1rem',
+                  transition: 'all 0.3s',
+                  position: 'relative',
+                  bottom: '-2px'
+                }}
+              >
+                🎤 Импорт со Smule
+              </button>
+            </div>
+          </div>
+
+          {/* Smule импорт */}
+          {uploadMode === 'smule' && (
+            <div style={{ background: '#f7fafc', padding: '1.5rem', borderRadius: '8px', marginBottom: '2rem', border: '2px dashed #cbd5e0' }}>
+              <h3 style={{ marginTop: 0, color: '#2d3748' }}>🎵 Импорт со Smule</h3>
+              
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#2d3748' }}>
+                  URL записи *
+                </label>
+                <input
+                  type="text"
+                  value={smuleUrl}
+                  onChange={(e) => setSmuleUrl(e.target.value)}
+                  placeholder="https://www.smule.com/recording/..."
+                  disabled={smuleFetching}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #cbd5e0',
+                    borderRadius: '6px',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#2d3748' }}>
+                  Session Cookie * 
+                  <button 
+                    type="button"
+                    onClick={() => setShowCookieHelp(!showCookieHelp)}
+                    style={{ 
+                      marginLeft: '8px', 
+                      background: 'none', 
+                      border: 'none', 
+                      color: '#667eea', 
+                      cursor: 'pointer',
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    {showCookieHelp ? '▼' : '▶'} Как получить?
+                  </button>
+                </label>
+                <input
+                  type="text"
+                  value={smuleCookie}
+                  onChange={(e) => setSmuleCookie(e.target.value)}
+                  placeholder="smule_session=ваш_cookie_здесь..."
+                  disabled={smuleFetching}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #cbd5e0',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    fontFamily: 'monospace'
+                  }}
+                />
+              </div>
+
+              {showCookieHelp && (
+                <div style={{ 
+                  background: '#e6f7ff', 
+                  padding: '16px', 
+                  borderRadius: '8px', 
+                  marginBottom: '1rem',
+                  border: '1px solid #91d5ff'
+                }}>
+                  <strong>📖 Как получить session cookie:</strong>
+                  <ol style={{ margin: '8px 0 0 0', paddingLeft: '20px', fontSize: '0.9rem' }}>
+                    <li>Откройте <a href="https://www.smule.com" target="_blank" rel="noopener">smule.com</a> и войдите в аккаунт</li>
+                    <li>Откройте DevTools: <code>F12</code> или <code>Ctrl+Shift+I</code></li>
+                    <li>Перейдите во вкладку <strong>Application</strong> (Chrome) или <strong>Storage</strong> (Firefox)</li>
+                    <li>Найдите <strong>Cookies</strong> → <strong>https://www.smule.com</strong></li>
+                    <li>Найдите cookie с именем <code>smule_session</code> или <code>SMULE_AUTH</code></li>
+                    <li>Скопируйте полное значение cookie (имя=значение)</li>
+                    <li>Вставьте сюда</li>
+                  </ol>
+                  <p style={{ margin: '12px 0 0 0', fontSize: '0.85rem', color: '#595959' }}>
+                    🔒 <strong>Безопасность:</strong> Cookie остаётся только на вашем устройстве и используется один раз для загрузки трека
+                  </p>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleSmuleImport}
+                disabled={smuleFetching || !smuleUrl || !smuleCookie}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontWeight: '600',
+                  fontSize: '1rem',
+                  cursor: (smuleFetching || !smuleUrl || !smuleCookie) ? 'not-allowed' : 'pointer',
+                  opacity: (smuleFetching || !smuleUrl || !smuleCookie) ? 0.5 : 1
+                }}
+              >
+                {smuleFetching ? '⏳ Загрузка...' : '✨ Импортировать трек'}
+              </button>
+            </div>
+          )}
+
           {errors.general && (
             <div style={{ 
               color: '#e53e3e', 

@@ -3,10 +3,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { recordingUrl } = req.body
+  const { recordingUrl, cookie } = req.body
 
   if (!recordingUrl) {
     return res.status(400).json({ error: 'Recording URL is required' })
+  }
+
+  if (!cookie) {
+    return res.status(400).json({ error: 'Session cookie is required' })
   }
 
   try {
@@ -17,17 +21,18 @@ export default async function handler(req, res) {
       recordingKey = urlParts[urlParts.length - 1]
     }
 
-    // Формируем URL для API Smule (используем прямой API endpoint)
+    // Формируем URL для API Smule
     const apiUrl = `https://www.smule.com/api/performances/key/${recordingKey}/`
     
-    console.log('Fetching from Smule API:', apiUrl)
+    console.log('Fetching from Smule API with auth:', apiUrl)
 
-    // Делаем запрос с User-Agent для обхода блокировок
+    // Делаем запрос с cookie пользователя
     const response = await fetch(apiUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'application/json',
-        'Referer': 'https://www.smule.com/'
+        'Referer': 'https://www.smule.com/',
+        'Cookie': cookie
       }
     })
 
